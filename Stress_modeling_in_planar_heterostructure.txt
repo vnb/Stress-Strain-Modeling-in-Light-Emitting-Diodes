@@ -1,0 +1,85 @@
+% n = input('number of layers = ');
+% a1 = input('Lattice constant of overgrowth(Angstroms) = ');
+% a2 = input('Lattice constant of product(Angstroms) = ');
+% a3 = input('Lattice constant of substrate(Angstroms) = ');
+% s11 = input('Stiffness coefficient s111/(Pa) = ');
+% s12 = input('Stiffness coefficient s121/(Pa) = ');
+% c = input('Critical thickness of material(metres) = ');
+% D = input('Density of material(m^3/mol) = ');
+% P1 = input('Shear moduli of overgrowth(Pa) = ');
+% P2 = input('Shear moduli of product(Pa) = ');
+% P3 = input('Shear moduli of substrate(Pa) = ');
+% va = input('Poissons ratio of overgrowth = ');
+% vb = input('Poissons ratio of undergrowth = ');
+n = 100;
+a1 = 3.189e-10 ;
+a2 = 3.084e-10 ;
+a3 = 4.758e-10 ;
+s11 = 0.00297e-09 ;
+s12 = -0.00077e-09 ;
+%c = input('Critical thickness of material(metres) = ');
+D = 1.37e-05/1000;
+P1 = 1.01e+11;
+P2 = 1.38e+11;
+P3 = 1.46e+11;
+va = 0.2578;
+vb = 0.359;
+start = 3.084e-10 ;
+begin =  3.189e-10 ;
+MinLc = zeros(n,1);
+Layers = zeros(n,1);
+MinE = zeros(n,1);
+for i = 1 : n
+    Layers(i,1) = i ;
+    u = 0 ;
+    t = round((begin-start)/(0.001e-10)) ;
+    X = zeros(t,1);
+    Y = zeros(t,1);
+    Z = zeros(t,1);
+    Total = zeros(t,1);
+% Strain Energy 
+    for lc = start : 0.001e-10 : 3.189e-10
+        u = u+1;
+        U_Strain = vpa(i*D*1/(s11+s12)*((a1-lc)/lc)^2) ;
+        X(u,1) = vpa(U_Strain);
+        Y(u,1) = lc ;
+        b = vpa(abs((2*(lc-a2))/(lc+a2)));
+       % B =   vpa(2*3.14*P2*b/((1-va)*(1+P2/P3)*P1));
+    if u == 1
+             B = vpa(2*3.14*P2*b/((1-va)*(1+P2/P3)*P1));
+             else
+                 G1 =vpa(((1-va)/P1+(1-vb)/P2)^(-1));
+                 B = vpa((2*3.14*G1*b)/(P1*P2)^0.5);
+    end
+    Z(u,1) = vpa(P2*2*a2*lc/((a2+lc)*(4*3.14^2))*(1+B-(1+B*B)^0.5-B*log(2*B*(1+B*B)^0.5-2*B^2))*D*1e+09);
+    %Z(u,1) =   P2*2*a1*a2/(4*3.14^2*(a1+a2))*(1+B-(1+B*B)^0.5-B*log(2*B*(1+B*B)^0.5-2*B^2))*D;
+    Total_Energy = vpa(X(u,1)+Z(u,1)) ;
+        Total(u,1) = vpa(Total_Energy) ;
+    end
+    Minimum = vpa(min(Total));
+    MinE(i,1) = min(Total) ;
+    for k = 1:u
+    if Minimum == vpa(Total(k,1))
+      
+        start = Y(k,1);
+    end
+    MinLc(i,1) = start;
+    end
+% plot(Y,X)
+% hold on
+% plot(Y,Z,'red')
+% hold on
+% plot(Y,Total,'green')
+% hold on
+% xlabel('Lattice Constant')
+% ylabel('Strain Energy, Dislocation Energy & Total Energy')
+end
+disp(MinLc)
+plot(Layers,MinE)
+xlabel('Lattice Constant');
+ylabel('Energy');
+
+% plot(MinLc,Layers)
+% xlabel('Lattice Constant')
+% ylabel('Layers')
+% H = min(Total);
