@@ -1,0 +1,14 @@
+function [ val ] = fac(a,ai,t,n,b)
+%lattice mismatch strain expression 
+% ai = Lattice constant of shell
+% aii = LC of Core
+% t = abs(ai-aii)
+% n = number of dislocations
+% b =  burger's vector
+
+   
+    %val=(a-ai)/ai;
+    val=(a-ai)/ai - (a-ai)/t*n*b;
+   
+
+end
