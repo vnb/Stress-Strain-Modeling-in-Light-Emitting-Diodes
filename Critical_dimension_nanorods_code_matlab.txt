@@ -1,0 +1,117 @@
+% Elasticity matrix 
+Ci = [1.90e+11, 1.04e+11, 1.21e+11,        0,        0,                       0; 
+      1.04e+11, 1.90e+11, 1.21e+11,        0,        0,                       0; 
+      1.58e+11, 1.58e+11, 1.82e+11,        0,        0,                       0;
+             0,        0,        0, 1.00e+10,        0,                       0;
+             0,        0,        0,        0, 1.00e+10,                       0;
+             0,        0,        0,        0,        0, 1/2*(1.90e+11-1.04e+11)];
+% Elasticity matrix 
+    Cii = [2.96e+11, 1.30e+11, 1.58e+11,       0,       0,                        0; 
+           1.30e+11, 2.96e+11, 1.58e+11,       0,       0,                        0; 
+           1.58e+11, 1.58e+11, 2.67e+11,       0,       0,                        0;
+                  0,        0,        0, 2.4e+10,       0,                        0;
+                  0,        0,        0,       0, 2.4e+10,                        0;
+                  0,        0,        0,       0,       0, 1/2*(2.96e+11-1.30e+11)];
+
+% Unstrained lattice parameter of the core
+  ai = 3.54e-10;
+% Unstrained lattice parameter of the core--- c-axis
+  ci = 5.70e-10;
+% Unstrained lattice parameter of the shell
+  aii = 3.16e-10;
+% Unstrained lattice parameter of the shell --- c-axis
+  cii = 5.13e-10;
+  t = abs(ai-aii);
+% Length of semi infinite nanorod 
+  L = 1e-06;
+% Radius of nanorod core
+%   r = 25e-09;
+% Magnitude of burgers vector for line dislocation
+  b = 3.16e-09;
+  
+  D =zeros(1,10);
+  E =zeros(1,10);
+  F =zeros(1,10);
+% No. of dislocations is 0 is the beginning
+  n = 0;                
+% Strain matrix elements
+  syms a c x y r h
+  ei = zeros(1,6);
+  e2i = fac(a,ai,t,n,b);
+  e3i = fac(c,ci,t,0,b);
+  e4i = 0;
+  e5i = 0;
+  e6i = 0;
+  e2ii = faci(a,aii,t,n,b);
+  e3ii = faci(c,cii,t,0,b);
+  e4ii = 0;
+  e5ii = 0;
+  e6ii = 0;
+  Epsilon1 = [ 0; e2i; e3i; e4i; e5i; e6i];
+  Epsilon2 = [ 0; e2ii; e3ii; e4ii; e5ii; e6ii];
+  % First element of Sigma1 and Sigma2 represents the rotated stress tensor
+  % element normal to the interface at a point. Sigma1(1,1)=Sigma2(1,1)=0;
+ % c =Equilibrium lattice constant, k = radius in the second part of the code 
+%-----------------------------------------------------------------------------------------------------------------------------
+% h = Thickness of GaN layer on InN nanorords in the following range; At
+% different thicknesses and a fixed radius of the nanorod lattice constant equilibrium lattice constants a and c are found by
+% maximizing strain energy; FUNCTIONS for longtitudinal Strain components
+% are called here.  
+U = Utest1(Epsilon1,Epsilon2,Ci,Cii,L);
+% Answershit = subs(U,'a',0.3484e-08);
+% Answershit1 = subs(Answershit,'c',0.5610e-08);
+% Answershit2 = subs(Answershit1,'h',1e-09);
+% Answershit3 = (subs(Answershit2,'r',25e-09))
+j = 1;
+% Finding lattice constant at varying h and constant r. 
+for i = 1e-09:1e-09:50e-09
+    syms c
+Unew = eval(subs(U,'h',i));
+Unew2 = eval(subs(Unew,'r',25e-09));
+ g = ai*((c-ci)/ci+1);
+ Un = subs(Unew2,'a',g);
+dUn = diff(Un,c);
+D(1,j) = i;
+c =  eval(solve(dUn,c));
+E(1,j) = c;
+F(1,j) = ai*(c-ci)/ci+ai;
+j = j+1;
+end
+ % Thickness vs lattice constant 'c'
+%plot(D,E);
+ %xlabel('h,(Thickness in meters)')
+ %ylabel('c,(Lattice constant in meters)')
+% hold on
+% Thickness vs lattice constant 'a'
+ %plot(D,F);
+ %xlabel('h,(Thickness in meters)')
+ %ylabel('a,(Lattice constant in meters)')
+%disp(F) 
+%--------------------------------------------------------------------------
+%In this part of the code dislocations appear. n is no longer zero. 
+    thickness = 1e-09;
+    Y = zeros(1,50);
+syms a c n h r
+    e2i = fac(a,ai,t,n,b);
+    e3i = fac(c,ci,t,0,b);
+    e2ii = faci(a,aii,t,n,b);
+    e3ii = faci(c,cii,t,0,b);
+    Epsilon1 = [ 0; e2i; e3i; e4i; e5i; e6i];
+    Epsilon2 = [ 0; e2ii; e3ii; e4ii; e5ii; e6ii];
+    Uo = Utest1(Epsilon1,Epsilon2,Ci,Cii,L);
+    Uline = n*(2*3.14*r*L)*(Cii(1,1) - Cii(1,2))/(2*Cii(1,1))*b^2/(4*3.14)*log(4*h/b);
+    U = Uo+Uline;
+    dU = diff(U,n);
+    funcr = subs(dU,'n',0);
+    radii = solve(funcr,r);
+for i = 1:50
+    r1 = subs(radii,'h',thickness);
+    r2 = subs(r1,'a',F(1,i));
+    r = subs(r2,'c',E(1,i));
+    Y(1,i) = r(2);
+    thickness = thickness+1e-09;
+end
+%thickness vs radius
+ plot(D,Y)
+ xlabel('h,(Thickness in meters)')
+ ylabel('r,(radius in meters)')
