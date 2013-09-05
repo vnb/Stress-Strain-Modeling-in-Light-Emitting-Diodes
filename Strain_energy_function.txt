@@ -1,0 +1,28 @@
+function [y] = Utest1(Epsilon1,Epsilon2,Ci,Cii,L)
+ % First element of Sigma1 and Sigma2 represents the rotated stress tensor
+  % element normal to the interface at a point. Sigma1(1,1)=Sigma2(1,1)=0;
+  syms x y r h a c n
+  Epsilon1(1,1) = x;
+  Epsilon2(1,1) = y;
+  Sigma1 =  Ci*Epsilon1;
+   Sigma2 =  Cii*Epsilon2;
+   e1i = solve(Sigma1(1,1), x);
+   e1ii = solve(Sigma2(1,1), y);
+   Epsilon1 = subs(Epsilon1,'x',e1i);
+   Epsilon2 = subs(Epsilon2,'y',e1ii);
+   Sigma1 = subs(Sigma1,'x',e1i);
+   Sigma2 = subs(Sigma2,'y',e1ii);
+% Strain Energy Density 
+   SEDi = Epsilon1'*Sigma1;
+   SEDii = Epsilon2'*Sigma2;
+% % c =Equilibrium lattice constant, k = radius in the second part of the code 
+     Wi = SEDi*2*3.14*L*r;
+     Wii = SEDii*2*3.14*L*r;
+     Ui = int(Wi,r,0, r);
+Uii = int(Wii,r,r,r+h);
+U = Ui+Uii;     
+U = subs(U,'conj(a)',a);
+U = subs(U,'conj(c)',c);
+U = subs(U,'conj(n)',n);
+y = U;
+end
